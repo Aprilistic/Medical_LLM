@@ -13,8 +13,10 @@ Original file is located at
 # %pip install "transformers==4.31.0" "datasets==2.13.0" "peft==0.4.0" "accelerate==0.21.0" "bitsandbytes==0.40.2" "trl==0.4.7" "safetensors>=0.3.1" --upgrade --quiet
 
 import huggingface_hub
+import wandb
 
-huggingface_hub.login()
+huggingface_hub.login(token='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')
+wandb.login()
 
 import os
 import torch
@@ -36,7 +38,7 @@ from trl import SFTTrainer
 
 from random import randrange
 
-dataset = load_dataset("pubmed_qa", "pqa_labeled", split="train")
+dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
 
 print(f"dataset size: {len(dataset)}")
 print(dataset[randrange(len(dataset))])
@@ -58,91 +60,10 @@ from random import randrange
 
 print(format_instruction(dataset[randrange(len(dataset))]))
 
-!python -c "import torch; assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'"
-!pip install ninja packaging
-!MAX_JOBS=4 pip install flash-attn --no-build-isolation
+# !python -c "import torch; assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'"
+# !pip install ninja packaging
+# !MAX_JOBS=4 pip install flash-attn --no-build-isolation
 
-# Used for multi-gpu
-local_rank = -1
-per_device_train_batch_size = 4
-per_device_eval_batch_size = 4
-gradient_accumulation_steps = 1
-learning_rate = 2e-4
-max_grad_norm = 0.3
-weight_decay = 0.001
-lora_alpha = 16
-lora_dropout = 0.1
-lora_r = 64
-max_seq_length = None
-
-# The model that you want to train from the Hugging Face hub
-model_name = "meta-llama/Llama-2-7b-chat-hf"
-
-# Fine-tuned model name
-new_model = "llama-2-7b-pubmed-qa"
-
-# The instruction dataset to use
-dataset_name = "pubmed_qa"
-
-# Activate 4-bit precision base model loading
-use_4bit = True
-
-# Activate nested quantization for 4-bit base models
-use_nested_quant = False
-
-# Compute dtype for 4-bit base models
-bnb_4bit_compute_dtype = "float16"
-
-# Quantization type (fp4 or nf4)
-bnb_4bit_quant_type = "nf4"
-
-# Number of training epochs
-num_train_epochs = 2
-
-# Enable fp16 training, (bf16 to True with an A100)
-fp16 = False
-
-# Enable bf16 training
-bf16 = False
-
-# Use packing dataset creating
-packing = True
-
-# Enable gradient checkpointing
-gradient_checkpointing = True
-
-# Optimizer to use, original is paged_adamw_32bit
-optim = "paged_adamw_32bit"
-
-# Learning rate schedule (constant a bit better than cosine, and has advantage for analysis)
-lr_scheduler_type = "cosine"
-
-# Number of optimizer update steps, 10K original, 20 for demo purposes
-max_steps = -1
-
-# Fraction of steps to do a warmup for
-warmup_ratio = 0.03
-
-# Group sequences into batches with same length (saves memory and speeds up training considerably)
-group_by_length = True
-
-# Save checkpoint every X updates steps
-save_steps = 10
-
-# Log every X updates steps
-logging_steps = 1
-
-# The output directory where the model predictions and checkpoints will be written
-output_dir = "llama-7-int4-pubmed-qa"
-
-# Load the entire model on the GPU 0
-device_map = {"": 0}
-
-# Visualize training
-report_to = "tensorboard"
-
-# Tensorboard logs
-tb_log_dir = "./results/logs"
 
 use_flash_attention = False
 # COMMENT IN TO USE FLASH ATTENTION
@@ -155,27 +76,18 @@ use_flash_attention = False
 
 
 # Hugging Face model id
-model_id = model_name
-
+model_id = "meta-llama/Llama-2-7b-hf"
 
 # BitsAndBytesConfig int-4 config
-compute_dtype = getattr(torch, bnb_4bit_compute_dtype)
-
 bnb_config = BitsAndBytesConfig(
-    load_in_4bit=use_4bit,
-    bnb_4bit_quant_type=bnb_4bit_quant_type,
-    bnb_4bit_compute_dtype=compute_dtype,
-    bnb_4bit_use_double_quant=use_nested_quant,
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16
 )
 
 # Load model and tokenizer
-model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        device_map=device_map,
-        quantization_config=bnb_config
-    )
-
-model.config.use_cache = False
+model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=bnb_config, use_cache=False, device_map={"":0})
 model.config.pretraining_tp = 1
 
 # Validate that the model is using flash attention, by comparing doc strings
@@ -183,47 +95,42 @@ if use_flash_attention:
     from utils.llama_patch import forward
     assert model.model.layers[0].self_attn.forward.__doc__ == forward.__doc__, "Model is not using flash attention"
 
-
-tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_id)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
+
+from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
+
 # LoRA config
 peft_config = LoraConfig(
-        lora_alpha=lora_alpha,
-        lora_dropout=lora_dropout,
-        r=lora_r,
+        lora_alpha=16,
+        lora_dropout=0.1,
+        r=64,
         bias="none",
         task_type="CAUSAL_LM",
 )
 
-
 # prepare model for training
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    device_map=device_map,
-    quantization_config=bnb_config
-)
-
-model.config.use_cache = False
-model.config.pretraining_tp = 1
+model = prepare_model_for_kbit_training(model)
+model = get_peft_model(model, peft_config)
 
 training_arguments = TrainingArguments(
-    output_dir=output_dir,
-    # per_device_train_batch_size=6 if use_flash_attention else 4,
-    per_device_train_batch_size=per_device_train_batch_size,
-    gradient_accumulation_steps=gradient_accumulation_steps,
-    optim=optim,
-    save_steps=save_steps,
-    logging_steps=logging_steps,
-    learning_rate=learning_rate,
-    fp16=fp16,
-    bf16=bf16,
-    max_grad_norm=max_grad_norm,
-    max_steps=max_steps,
-    warmup_ratio=warmup_ratio,
-    group_by_length=group_by_length,
-    lr_scheduler_type=lr_scheduler_type,
+    output_dir="llama_2_7b_chat_hf_finetune",
+    num_train_epochs=3,
+    per_device_train_batch_size=6 if use_flash_attention else 4,
+    gradient_accumulation_steps=2,
+    gradient_checkpointing=True,
+    optim="paged_adamw_32bit",
+    logging_steps=100,
+    save_strategy="epoch",
+    learning_rate=2e-4,
+    bf16=True,
+    tf32=True,
+    max_grad_norm=0.3,
+    warmup_ratio=0.03,
+    lr_scheduler_type="constant",
+    disable_tqdm=False
 )
 
 from trl import SFTTrainer
@@ -236,7 +143,7 @@ trainer = SFTTrainer(
     peft_config=peft_config,
     max_seq_length=max_seq_length,
     tokenizer=tokenizer,
-    packing=packing,
+    packing=True,
     formatting_func=format_instruction,
     args=training_arguments,
 )
@@ -288,5 +195,5 @@ merged_model.save_pretrained("merged_model",safe_serialization=True)
 tokenizer.save_pretrained("merged_model")
 
 # push merged model to the hub
-# merged_model.push_to_hub("user/repo")
-# tokenizer.push_to_hub("user/repo")
+merged_model.push_to_hub("BLACKBUN/llama-2-7b-pubmed-qa")
+tokenizer.push_to_hub("BLACKBUN/llama-2-7b-pubmed-qa")
