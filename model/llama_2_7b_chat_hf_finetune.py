@@ -12,13 +12,17 @@ Original file is located at
 # Commented out IPython magic to ensure Python compatibility.
 # %pip install "transformers==4.31.0" "datasets==2.13.0" "peft==0.4.0" "accelerate==0.21.0" "bitsandbytes==0.40.2" "trl==0.4.7" "safetensors>=0.3.1" --upgrade --quiet
 
-import huggingface_hub
-import wandb
-
-huggingface_hub.login(token='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')
-wandb.login()
-
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import huggingface_hub
+# import wandb
+
+huggingface_hub.login(token=os.getenv('HF_API_KEY'))
+# wandb.login()
+
 import torch
 from random import randrange
 from datasets import load_dataset
