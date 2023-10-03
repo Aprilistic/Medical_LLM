@@ -23,7 +23,7 @@ huggingface_hub.login(token=os.getenv('HF_API_KEY'))
 
 import wandb
 
-
+os.environ["WANDB_API_KEY"] = os.getenv('WANDB_API_KEY')
 os.environ["WANDB_PROJECT"] = "AIDoc" # log to your project 
 os.environ["WANDB_LOG_MODEL"] = "all" # log your models
 

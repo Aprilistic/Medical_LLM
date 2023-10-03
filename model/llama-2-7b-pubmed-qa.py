@@ -23,7 +23,7 @@ huggingface_hub.login(token=os.getenv('HF_API_KEY'))
 
 import wandb
 
-
+os.environ["WANDB_API_KEY"] = os.getenv('WANDB_API_KEY')
 os.environ["WANDB_PROJECT"] = "AIDoc" # log to your project 
 os.environ["WANDB_LOG_MODEL"] = "all" # log your models
 
@@ -49,7 +49,6 @@ from trl import SFTTrainer
 from random import randrange
 
 dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
-dataset = dataset.select(range(10000))
 
 print(f"dataset size: {len(dataset)}")
 print(dataset[randrange(len(dataset))])
@@ -211,5 +210,5 @@ merged_model.save_pretrained("merged_model",safe_serialization=True)
 tokenizer.save_pretrained("merged_model")
 
 # push merged model to the hub
-merged_model.push_to_hub("llama-2-7b-pubmed-qa-10000")
-tokenizer.push_to_hub("llama-2-7b-pubmed-qa-10000")
+merged_model.push_to_hub("llama-2-7b-pubmed-qa")
+tokenizer.push_to_hub("llama-2-7b-pubmed-qa")
