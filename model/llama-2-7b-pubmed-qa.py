@@ -18,10 +18,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import huggingface_hub
-# import wandb
 
 huggingface_hub.login(token=os.getenv('HF_API_KEY'))
-# wandb.login()
+
+import wandb
+
+
+os.environ["WANDB_PROJECT"] = "AIDoc" # log to your project 
+os.environ["WANDB_LOG_MODEL"] = "all" # log your models
+
+wandb.init()
 
 import torch
 from random import randrange
@@ -43,6 +49,7 @@ from trl import SFTTrainer
 from random import randrange
 
 dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
+dataset = dataset.select(range(10000))
 
 print(f"dataset size: {len(dataset)}")
 print(dataset[randrange(len(dataset))])
@@ -120,8 +127,9 @@ model = prepare_model_for_kbit_training(model)
 model = get_peft_model(model, peft_config)
 
 training_arguments = TrainingArguments(
-    output_dir="llama_2_7b_chat_hf_finetune",
-    num_train_epochs=3,
+    report_to="wandb",
+    output_dir="llama-2-7b-pubmed",
+    num_train_epochs=2,
     per_device_train_batch_size=6 if use_flash_attention else 4,
     gradient_accumulation_steps=2,
     gradient_checkpointing=True,
@@ -137,6 +145,8 @@ training_arguments = TrainingArguments(
     disable_tqdm=False
 )
 
+wandb.config.update(training_arguments)
+
 from trl import SFTTrainer
 
 max_seq_length = 2048 # max sequence length for model and packing of the dataset
@@ -151,6 +161,8 @@ trainer = SFTTrainer(
     formatting_func=format_instruction,
     args=training_arguments,
 )
+
+wandb.watch(model)
 
 # train
 trainer.train() # there will not be a progress bar since tqdm is disabled
@@ -199,5 +211,5 @@ merged_model.save_pretrained("merged_model",safe_serialization=True)
 tokenizer.save_pretrained("merged_model")
 
 # push merged model to the hub
-merged_model.push_to_hub("BLACKBUN/llama-2-7b-pubmed-qa")
-tokenizer.push_to_hub("BLACKBUN/llama-2-7b-pubmed-qa")
+merged_model.push_to_hub("llama-2-7b-pubmed-qa-10000")
+tokenizer.push_to_hub("llama-2-7b-pubmed-qa-10000")
