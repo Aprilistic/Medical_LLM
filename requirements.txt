@@ -12,3 +12,5 @@ wandb
 ninja
 packaging
 python-dotenv
+urllib3
+chardet
