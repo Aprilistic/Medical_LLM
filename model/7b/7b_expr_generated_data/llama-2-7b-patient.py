@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
-
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import huggingface_hub
+import wandb
 
 huggingface_hub.login(token=os.getenv('HF_API_KEY'))
 
-import wandb
-
 os.environ["WANDB_API_KEY"] = os.getenv('WANDB_API_KEY')
-os.environ["WANDB_PROJECT"] = "AIDoc_finetune" # log to your project 
+os.environ["WANDB_PROJECT"] = "AIDoc" # log to your project 
 os.environ["WANDB_LOG_MODEL"] = "all" # log your models
 
 wandb.init()
@@ -37,9 +34,6 @@ from trl import SFTTrainer
 from random import randrange
 
 dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
-
-# select 10 samples
-dataset = dataset.select(range(10))
 
 print(f"dataset size: {len(dataset)}")
 print(dataset[randrange(len(dataset))])
@@ -117,9 +111,8 @@ model = prepare_model_for_kbit_training(model)
 model = get_peft_model(model, peft_config)
 
 training_arguments = TrainingArguments(
-    # report_to="wandb",
-    output_dir="llama-2-7b-pubmed",
-    num_train_epochs=2,
+    output_dir="test",
+    num_train_epochs=3,
     per_device_train_batch_size=6 if use_flash_attention else 4,
     gradient_accumulation_steps=2,
     gradient_checkpointing=True,
@@ -135,8 +128,6 @@ training_arguments = TrainingArguments(
     disable_tqdm=False
 )
 
-wandb.config.update(training_arguments)
-
 from trl import SFTTrainer
 
 max_seq_length = 2048 # max sequence length for model and packing of the dataset
@@ -151,8 +142,6 @@ trainer = SFTTrainer(
     formatting_func=format_instruction,
     args=training_arguments,
 )
-
-wandb.watch(model)
 
 # train
 trainer.train() # there will not be a progress bar since tqdm is disabled
