@@ -14,8 +14,10 @@ os.environ["WANDB_LOG_MODEL"] = "all" # log your models
 
 wandb.init()
 
-from datasets import load_dataset
+import torch
 from random import randrange
+from datasets import load_dataset
+from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer
 
 # Load dataset from the hub
 dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
@@ -77,6 +79,7 @@ peft_config = LoraConfig(
 
 # prepare model for training
 model = prepare_model_for_kbit_training(model)
+model = get_peft_model(model, peft_config)
 
 from transformers import TrainingArguments
 
@@ -102,13 +105,6 @@ args = TrainingArguments(
 
 wandb.config.update(args)
 
-# Upcast layer for flash attnetion
-if use_flash_attention:
-    from utils.llama_patch import upcast_layer_for_flash_attention
-    torch_dtype = torch.bfloat16 if args.bf16 else torch.float16 if args.fp16 else torch.float32
-    model = upcast_layer_for_flash_attention(model, torch_dtype)
-
-model = get_peft_model(model, peft_config)
 
 
 from trl import SFTTrainer
@@ -133,10 +129,6 @@ trainer.train() # there will not be a progress bar since tqdm is disabled
 # save model
 trainer.save_model()
 
-if use_flash_attention:
-    # unpatch flash attention
-    from utils.llama_patch import unplace_flash_attn_with_attn
-    unplace_flash_attn_with_attn()
 
 import torch
 from peft import AutoPeftModelForCausalLM
