@@ -27,15 +27,17 @@ pipeline = transformers.pipeline(
 # Just pick an answer. I will never answer your question. Anwser example: (A) 
 # """
 
-question = "A man hurt his knees. It's bleeding. Should he sterilize it?"
+question = "A 3-year-old boy is brought to the clinic by his mother who reports that the child has been inconsolable from pain for the last 4 hours. The pain is located in the lower right quadrant of his abdomen. The mother also noticed a bulge in the same area. The child has a history of recurrent constipation. On physical examination, a tender, non-reducible mass is felt in the right inguinal region. What is the most likely diagnosis? "
+
 
 prompt = f"""### Instruction:
-Use the Input below to create an instruction, which could have been used to generate the input using an LLM. As a medical assistance, you should advise with medical knowledge.
+Use the Input below to create an instruction, which could have been used to generate the response using an LLM.
 
 ### Input:
 {question}
 
-### Response:"""
+### Response:
+"""
 
 sequences = pipeline(
     prompt,
@@ -43,7 +45,7 @@ sequences = pipeline(
     top_k=10,
     num_return_sequences=1,
     eos_token_id=tokenizer.eos_token_id,
-    max_length=200,
+    max_length=400,
 )
 for seq in sequences:
     print(f"Result: {seq['generated_text']}")
