@@ -16,3 +16,4 @@ python-dotenv
 urllib3
 chardet
 llama-trainer
+dotenv
