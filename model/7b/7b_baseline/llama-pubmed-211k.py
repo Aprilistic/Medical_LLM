@@ -48,7 +48,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 use_flash_attention = False
 
 # Hugging Face model id
-model_id = "meta-llama/Llama-2-7b-hf"
+model_id = "meta-llama/Llama-2-7b-chat-hf"
 
 
 # BitsAndBytesConfig int-4 config
@@ -84,7 +84,7 @@ model = get_peft_model(model, peft_config)
 from transformers import TrainingArguments
 
 args = TrainingArguments(
-    report_to="wandb",
+    # report_to="wandb",
     output_dir="llama-2-7b-pubmed-qa-211k",
     num_train_epochs=2,
     per_device_train_batch_size=6 if use_flash_attention else 4,
