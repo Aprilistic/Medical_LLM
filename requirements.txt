@@ -15,5 +15,5 @@ packaging
 python-dotenv
 urllib3
 chardet
-llama-trainer
+# llama-trainer
 dotenv
