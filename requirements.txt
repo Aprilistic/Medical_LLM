@@ -17,3 +17,4 @@ urllib3
 chardet
 # llama-trainer
 python-dotenv
+huggingface_hub
