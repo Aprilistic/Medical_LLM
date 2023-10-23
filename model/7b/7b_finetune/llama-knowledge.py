@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-    import huggingface_hub
+import huggingface_hub
 import wandb
 
 huggingface_hub.login(token=os.getenv('HF_API_KEY'))
