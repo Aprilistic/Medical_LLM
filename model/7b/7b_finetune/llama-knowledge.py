@@ -3,13 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import huggingface_hub
+    import huggingface_hub
 import wandb
 
 huggingface_hub.login(token=os.getenv('HF_API_KEY'))
 
 os.environ["WANDB_API_KEY"] = os.getenv('WANDB_API_KEY')
-os.environ["WANDB_PROJECT"] = "AIDoc" # log to your project 
+os.environ["WANDB_PROJECT"] = "AIDoc_finetune" # log to your project 
 os.environ["WANDB_LOG_MODEL"] = "all" # log your models
 
 wandb.init()
@@ -20,7 +20,7 @@ from datasets import load_dataset
 from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer
 
 # Load dataset from the hub
-dataset = load_dataset("pubmed_qa", "pqa_artificial", split="train")
+dataset = load_dataset("BLACKBUN/paediatrics_abdominal_pain", split="train")
 
 # dataset.select(range(10000))
 
@@ -29,13 +29,13 @@ print(dataset[randrange(len(dataset))])
 
 def format_instruction(sample):
 	return f"""### Instruction:
-Use the Input below to create an instruction, which could have been used to generate the response using an LLM.
+Use the Input below to create an instruction for further use, which could have been used to generate the response using an LLM.
 
-### Input:
-{sample['question']}
+### Disease:
+{sample['Disease']}
 
 ### Response:
-{sample['long_answer']}
+{sample['Explanation']}
 """
 
 from random import randrange
@@ -48,7 +48,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 use_flash_attention = False
 
 # Hugging Face model id
-model_id = "meta-llama/Llama-2-7b-chat-hf"
+model_id = "BLACKBUN/llama-2-7b-pubmed-qa-211k"
 
 
 # BitsAndBytesConfig int-4 config
@@ -85,8 +85,8 @@ from transformers import TrainingArguments
 
 args = TrainingArguments(
     # report_to="wandb",
-    output_dir="llama-2-7b-pubmed-qa-211k",
-    num_train_epochs=2,
+    output_dir="llama-2-7b-knowledge",
+    num_train_epochs=20,
     per_device_train_batch_size=6 if use_flash_attention else 4,
     gradient_accumulation_steps=2,
     gradient_checkpointing=True,
@@ -135,7 +135,7 @@ from peft import AutoPeftModelForCausalLM
 from transformers import AutoTokenizer
 
 
-args.output_dir = "llama-2-7b-pubmed-qa-211k"
+args.output_dir = "llama-2-7b-knowledge"
 
 # load base LLM model and tokenizer
 model = AutoPeftModelForCausalLM.from_pretrained(
@@ -145,31 +145,6 @@ model = AutoPeftModelForCausalLM.from_pretrained(
     load_in_4bit=True,
 )
 tokenizer = AutoTokenizer.from_pretrained(args.output_dir)
-
-from datasets import load_dataset
-from random import randrange
-
-
-# Load dataset from the hub and get a sample
-dataset = load_dataset("pubmed_qa", "pqa_labeled", split="train")
-sample = dataset[randrange(len(dataset))]
-
-prompt = f"""### Instruction:
-Use the Input below to create an instruction, which could have been used to generate the response using an LLM.
-
-### Input:
-{sample['question']}
-
-### Response:
-"""
-
-input_ids = tokenizer(prompt, return_tensors="pt", truncation=True).input_ids.cuda()
-with torch.inference_mode():
-	outputs = model.generate(input_ids=input_ids, max_new_tokens=100, do_sample=True, top_p=0.9,temperature=0.9)
-
-print(f"Prompt:\n{sample['question']}\n")
-print(f"Generated instruction:\n{tokenizer.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0][len(prompt):]}")
-print(f"Ground truth:\n{sample['long_answer']}")
 
 from peft import AutoPeftModelForCausalLM
 
@@ -182,9 +157,9 @@ model = AutoPeftModelForCausalLM.from_pretrained(
 merged_model = model.merge_and_unload()
 
 # Save the merged model
-merged_model.save_pretrained("merged_model",safe_serialization=True)
-tokenizer.save_pretrained("merged_model")
+merged_model.save_pretrained("knowledge_merged_model",safe_serialization=True)
+tokenizer.save_pretrained("knowledge_merged_model")
 
 # push merged model to the hub
-merged_model.push_to_hub("llama-2-7b-pubmed-qa-211k")
-tokenizer.push_to_hub("llama-2-7b-pubmed-qa-211k")
+merged_model.push_to_hub("llama-2-7b-knowledge")
+tokenizer.push_to_hub("llama-2-7b-knowledge")
