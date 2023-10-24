@@ -34,7 +34,7 @@ Use the Input below to create an instruction for further use, which could have b
 ### Disease:
 {sample['Disease']}
 
-### Response:
+### Explanation:
 {sample['Explanation']}
 """
 
