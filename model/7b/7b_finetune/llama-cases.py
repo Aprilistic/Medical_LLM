@@ -91,7 +91,7 @@ from transformers import TrainingArguments
 args = TrainingArguments(
     # report_to="wandb",
     output_dir="llama-2-7b-knowledge",
-    num_train_epochs=20,
+    num_train_epochs=5,
     per_device_train_batch_size=6 if use_flash_attention else 4,
     gradient_accumulation_steps=2,
     gradient_checkpointing=True,
