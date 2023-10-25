@@ -90,7 +90,7 @@ from transformers import TrainingArguments
 
 args = TrainingArguments(
     # report_to="wandb",
-    output_dir="llama-2-7b-knowledge",
+    output_dir="llama-2-7b-imaginary-patient-cases",
     num_train_epochs=5,
     per_device_train_batch_size=6 if use_flash_attention else 4,
     gradient_accumulation_steps=2,
@@ -140,7 +140,7 @@ from peft import AutoPeftModelForCausalLM
 from transformers import AutoTokenizer
 
 
-args.output_dir = "llama-2-7b-knowledge"
+args.output_dir = "llama-2-7b-imaginary-patient-cases"
 
 # load base LLM model and tokenizer
 model = AutoPeftModelForCausalLM.from_pretrained(
@@ -162,9 +162,9 @@ model = AutoPeftModelForCausalLM.from_pretrained(
 merged_model = model.merge_and_unload()
 
 # Save the merged model
-merged_model.save_pretrained("knowledge_merged_model",safe_serialization=True)
-tokenizer.save_pretrained("knowledge_merged_model")
+merged_model.save_pretrained("case_merged_model",safe_serialization=True)
+tokenizer.save_pretrained("case_merged_model")
 
 # push merged model to the hub
-merged_model.push_to_hub("llama-2-7b-knowledge")
-tokenizer.push_to_hub("llama-2-7b-knowledge")
+merged_model.push_to_hub("llama-2-7b-imaginary-patient-cases")
+tokenizer.push_to_hub("llama-2-7b-imaginary-patient-cases")
