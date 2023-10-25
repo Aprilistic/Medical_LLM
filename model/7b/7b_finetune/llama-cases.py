@@ -21,12 +21,10 @@ from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer
 
 # Load dataset from the hub
 dataset = load_dataset("BLACKBUN/imaginary_patient_cases", split="train")
-dataset_check = load_dataset("BLACKBUN/imaginary_patient_cases", split="test")
 
 # dataset.select(range(10000))
 
 print(f"dataset train size: {len(dataset)}")
-print(f"dataset test size: {len(dataset_check)}")
 print(dataset[randrange(len(dataset))])
 
 def format_instruction(sample):
