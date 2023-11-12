@@ -24,7 +24,7 @@ sh ./prepare.sh
 Be careful of uploading your credentials!!
 
 ## Train the model
-[View My Notebook](https://github.com/Aprilistic/Medical_LLM/blob/main/model/training_guide.ipynb)
+[training_guide.md](https://github.com/Aprilistic/Medical_LLM/blob/main/model/training_guide.ipynb)
 
 
 ## Inference
