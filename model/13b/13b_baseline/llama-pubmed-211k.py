@@ -176,6 +176,7 @@ from peft import AutoPeftModelForCausalLM
 model = AutoPeftModelForCausalLM.from_pretrained(
     args.output_dir,
     low_cpu_mem_usage=True,
+    device_map="cpu",
 )
 
 # Merge LoRA and base model
