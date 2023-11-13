@@ -17,9 +17,9 @@ sh ./prepare.sh
 ## Modify `.env` file
 
 1. Huggingface API key
-    1. Since we are using huggingface library, you have to set your HF API key. Our python script will upload the model to HF, so you need to generate **WRITE** key.
+    1. Since we are using the huggingface library, you have to set your HF API key. Our Python script will upload the model to HF, so you need to generate **WRITE** key.
 2. wandb API key (optional)
-    1. This is optional but using wandb may help you check progress training your model.
+    1. This is optional but using wandb may help you check the progress of training your model.
 
 Be careful of uploading your credentials!!
 
