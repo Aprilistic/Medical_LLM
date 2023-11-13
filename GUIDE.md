@@ -5,7 +5,7 @@
 
 Tested on Linux, macOS
 
-## Install prerequisites
+### Install prerequisites
 
 1. Install the required packages by executing `prepare.sh`
 2. If some packages are not compatible, modify the `requirements.txt` 
