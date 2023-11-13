@@ -28,3 +28,4 @@ Be careful of uploading your credentials!!
 
 
 ## Inference
+[inference_guide.md](https://github.com/Aprilistic/Medical_LLM/blob/main/model/inference_guide.md)
