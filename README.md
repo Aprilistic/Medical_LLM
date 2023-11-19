@@ -1,35 +1,20 @@
-# README.md
-
-[https://github.com/Aprilistic/Medical_LLM](https://github.com/Aprilistic/Medical_LLM)
-
 # Research ongoing
 
 We will update our paperwork and progress later here.
 
----
+### Fine-tuned LLaMa2-7b-chat Models
+| Model / trained dataset | Transformer | .gguf converted with q8_0 |
+| --- | --- | --- |
+| Baseline / pubmed-qa | [link](https://huggingface.co/BLACKBUN/llama-2-7b-pubmed-qa-211k) | [link](https://huggingface.co/BLACKBUN/llama-2-7b-pubmed-qa-211k-gguf_q8_0) |
+| Knowledge based | [link](https://huggingface.co/BLACKBUN/llama-2-7b-paediatrics-abdominal-pain) | [link](https://huggingface.co/BLACKBUN/llama-2-7b-paediatrics-abdominal-pain-gguf_q8_0) |
+| Virtual Patient Case-based | [link](https://huggingface.co/BLACKBUN/llama-2-7b-virtual-patient-cases) | [link](https://huggingface.co/BLACKBUN/llama-2-7b-virtual-patient-cases-gguf_q8_0) |
+| Both knowledge and cases | [link](https://huggingface.co/BLACKBUN/llama-2-7b-both) | [link](https://huggingface.co/BLACKBUN/llama-2-7b-both-gguf_q8_0) |
 
-# A Step-by-Step Guide
+## A Step-by-Step Guide
+[A Step-by-Step Guide](https://github.com/Aprilistic/Medical_LLM/blob/main/GUIDE.md)
 
-## Environment Setup
 
-Tested on Linux, macOS
+## References
+[meta-llama (Meta Llama 2)](https://huggingface.co/meta-llama)
 
-## Install prerequisites
-
-1. Install the required packages by executing `prepare.sh`
-2. If some packages are not compatible, modify the `requirements.txt` 
-
-```bash
-sh ./prepare.sh
-```
-
-## Modify `.env` file
-
-1. Huggingface API key
-    1. Since we are using huggingface library, you have to set your HF API key. Our python script will upload the model to HF, so you need to generate **WRITE** key.
-2. wandb API key (optional)
-    1. This is optional but using wandb may help you check progress training your model.
-
-Be careful of uploading your credentials!!
-
-## Inference
+[llama.cpp](https://github.com/ggerganov/llama.cpp)
