@@ -20,3 +20,4 @@ chardet
 python-dotenv
 Jinja2
 fsspec==2023.9.2
+sentencepiece
