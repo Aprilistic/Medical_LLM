@@ -22,6 +22,12 @@ We will update our paperwork and progress later here.
 [A Step-by-Step Guide](https://github.com/Aprilistic/Medical_LLM/blob/main/GUIDE.md)
 
 
+## Contributers
+- **Jinho Heo** - *Major feature development* - [@Aprilistic](https://github.com/Aprilistic)
+- **Jinsig Yoo** - *Major feature development* - [@starplantr](https://github.com/starplantr)
+- **Sangyoon Kim** - *Major feature development* - [@ndkim11](https://github.com/ndkim11)
+
+
 ## References
 [meta-llama (Meta Llama 2)](https://huggingface.co/meta-llama)
 
